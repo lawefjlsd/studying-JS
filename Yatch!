@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Yacht!</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    text-align: center;
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  h1 { margin-bottom: 20px; }
+  h2 { margin-top: 20px; }
+
+  .layout {
+    display: flex;
+    gap: 40px;
+    align-items: flex-start;
+    justify-content: center;
+    width: 100%;
+    flex: 1;
+  }
+
+  #leftPanel {
+    width: 420px;
+  }
+
+  #rightPanel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    min-height: 400px;
+    position: relative;
+  }
+
+  table { border-collapse: collapse; width: 100%; }
+  th, td {
+    border: 1px solid #aaa;
+    padding: 6px 10px;
+    text-align: center;
+  }
+
+  .highlight { background: #eef; cursor: pointer; }
+
+  .dice-container {
+    display: flex;
+    gap: 10px;
+  }
+
+  .dice {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #333;
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    background-color: white;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    text-align: center;
+  }
+
+  .dice-value { font-size: 24px; font-weight: bold; }
+  .dice-state { font-size: 12px; opacity: 0.75; }
+
+  .dice:hover {
+    transform: translateY(-3px) scale(1.05);
+    background-color: #f0f8ff;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.25);
+  }
+
+  .dice.keep {
+    background-color: rgba(255,110,110,0.25);
+    border-color: #bb4444;
+  }
+
+.button {
+  background: linear-gradient(145deg, #4CAF50, #45a049);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: all 0.2s ease;
+  margin: 5px;
+  text-align: center;
+}
+
+.button:hover {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+}
+
+.button:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+  #resetBtn {
+    background: linear-gradient(to right, #9c27b0, #e040fb);
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    padding: 8px 12px;
+    cursor: pointer;
+    z-index: 100;
+  }
+  #howToPlay {
+    background: linear-gradient(to right, #2196F3, #0b7dda);
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    padding: 8px 12px;
+    cursor: pointer;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<h1>Yacht!</h1>
+<h2 id="turnInfo"></h2>
+
+<div class="layout">
+  <div id="leftPanel">
+    <h2>ScoreTable</h2>
+    <div id="scoreTable"></div>
+  </div>
+
+  <div id="rightPanel">
+    <div id="diceArea" class="dice-container"></div>
+    <div id="rollArea"></div>
+  </div>
+</div>
+
+<button id="resetBtn" onclick="resetGame()">Reset</button>
+<button id="howToPlay" onclick="howToPlay()">HowToPlay</button>
+
+<script>
+let players = ["P1","P2"];
+let scores = {};
+const categories = ["ONES","TWOS","THREES","FOURS","FIVES","SIXES","CHOICE","FOUR_KIND","FULL_HOUSE","SMALL_STRAIGHT","LARGE_STRAIGHT","YACHT"];
+let turn = 0;
+let round = 1;
+let rollCount = 3;
+let dice = [1,1,1,1,1];
+let keep = [false,false,false,false,false];
+
+function startGame(){
+  scores = {};
+  players.forEach(p=>{ scores[p]={}; categories.forEach(c=>scores[p][c]=null); });
+  turn=0; round=1; rollCount=3; keep=[false,false,false,false,false];
+  updateUI();
+}
+
+function howToPlay(){
+let txt = "1. You can roll the dice up to three times per turn.\n";
+txt += "2. Between rolls, you can choose to keep any dice.\n";
+txt += "3. After rolling, select a cell in the Score Table to record your score, which will pass the turn to the next player.\n";
+txt += "4. Scoring rules:\n";
+txt += "   - Ones to Sixes: sum of the dice showing that number.\n";
+txt += "   - Bonus: if the sum of Ones to Sixes is 63 or more, you get a bonus of 35 points.\n";
+txt += "   - Choice: sum of all dice.\n";
+txt += "   - Four of a Kind: if four dice show the same number, score is the sum of all dice.\n";
+txt += "   - Full House: if three dice show one number and two show another, score is the sum of all dice.\n";
+txt += "   - Small Straight / Large Straight: if dice show 4/5 consecutive numbers, score 15/30 points.\n";
+txt += "   - Yacht: if all five dice show the same number, score 50 points.\n";
+txt += "5. After 12 rounds, the player with the highest total score wins.\n";
+
+  alert(txt);
+}
+
+function updateUI(){
+  const current = players[turn];
+  document.getElementById("turnInfo").innerText = `Round ${round} / 12`;
+  renderDice();
+  renderRollButtons();
+  renderScoreTable();
+}
+
+function renderDice(){
+  const area = document.getElementById("diceArea");
+  area.innerHTML="";
+  dice.forEach((v,i)=>{
+    const div=document.createElement("div");
+    div.className="dice" + (keep[i]?" keep":"");
+    div.innerHTML=`<div class='dice-value'>${v}</div><div class='dice-state'>${keep[i]?"Keep":"Normal"}</div>`;
+    div.onclick=()=> toggleKeepDice(i);
+    area.appendChild(div);
+  });
+}
+
+function toggleKeepDice(i){
+  if(rollCount===3) return;
+  keep[i]=!keep[i];
+  updateUI();
+}
+
+function renderRollButtons(){
+  const area=document.getElementById("rollArea");
+  if(rollCount>0){
+    area.innerHTML=`<button id="rollbtn", onclick='rollDice()'>Roll (${rollCount}/3)</button>`;
+  } else {
+    area.innerHTML=`<i>Select Score!</i>`;
+  }
+}
+
+function rollDice(){
+  if(rollCount<=0) return;
+  let frames=10;
+  const interval=setInterval(()=>{
+    for(let i=0;i<5;i++){ if(!keep[i]) dice[i]=Math.floor(Math.random()*6)+1; }
+    renderDice();
+    frames--;
+    if(frames<=0){ clearInterval(interval); rollCount--; updateUI(); }
+  },50);
+}
+
+function renderScoreTable(){
+  let html="<table><tr><th>Categories</th>";
+  players.forEach((p,i)=>html+=`<th contenteditable='true' onblur='renamePlayer(${i},this.innerText)'>${escapeHtml(p)}</th>`);
+  html+="</tr>";
+
+  categories.forEach(cat=>{
+    html+=`<tr><td>${cat}</td>`;
+    players.forEach(p=>{
+      const val=scores[p][cat];
+      if(val===null){
+        if(players[turn]===p && rollCount<3){
+          const preview=calcScore(cat,dice);
+          html+=`<td class='highlight' onclick='selectScore("${cat}")' style='color:#bbb;'>${preview}</td>`;
+        } else html+="<td>-</td>";
+      } else html+=`<td>${val}</td>`;
+    });
+    html+="</tr>";
+
+    // Bonus
+    if(cat==="SIXES"){
+      html+=`<tr><td>Bonus</td>`;
+      players.forEach(p=>{
+        const sum123456 = ["ONES","TWOS","THREES","FOURS","FIVES","SIXES"]
+          .reduce((acc, key) => acc + (scores[p][key]||0), 0);
+        const bonus = sum123456 >= 63 ? 35 : 0;
+        html+=`<td>${bonus}</td>`;
+      });
+      html+="</tr>";
+    }
+  });
+
+  // Total
+  html+=`<tr><td>Total</td>`;
+  players.forEach(p=>{
+    let total = calcTotal(p);
+    html+=`<td>${total}</td>`;
+  });
+  html+="</tr>";
+
+  html+="</table>";
+  document.getElementById("scoreTable").innerHTML=html;
+}
+
+function calcTotal(p){
+    let total = categories.reduce((acc, key) => acc + (scores[p][key]||0), 0);
+    const sum123456 = ["ONES","TWOS","THREES","FOURS","FIVES","SIXES"]
+      .reduce((acc, key) => acc + (scores[p][key]||0), 0);
+    const bonus = sum123456 >= 63 ? 35 : 0;
+    total += bonus;
+    return total;
+}
+
+
+
+function renamePlayer(i,newName){
+  newName=newName.trim();
+  if(!newName) return;
+  const old=players[i];
+  if(old===newName) return;
+  scores[newName]=scores[old];
+  delete scores[old];
+  players[i]=newName;
+  updateUI();
+}
+
+function selectScore(cat){
+  const p=players[turn];
+  scores[p][cat]=calcScore(cat,dice);
+  turn++; if(turn>=players.length){ turn=0; round++; }
+  rollCount=3; keep=[false,false,false,false,false];
+  const allDone = players.every(p => categories.every(cat => scores[p][cat] !== null));
+  if(allDone){ endGame(); return; }
+  updateUI();
+}
+
+function calcScore(cat,d){
+  const counts=[0,0,0,0,0,0,0]; d.forEach(x=>counts[x]++);
+  const sum=d.reduce((a,b)=>a+b,0);
+  switch(cat){
+    case"ONES":return counts[1]*1;
+    case"TWOS":return counts[2]*2;
+    case"THREES":return counts[3]*3;
+    case"FOURS":return counts[4]*4;
+    case"FIVES":return counts[5]*5;
+    case"SIXES":return counts[6]*6;
+    case"CHOICE":return sum;
+    case"FOUR_KIND":for(let i=1;i<=6;i++)if(counts[i]>=4)return sum; return 0;
+    case"FULL_HOUSE":return counts.some(c=>c===3)&&counts.some(c=>c===2)?sum:0;
+    case"SMALL_STRAIGHT":return hasStraight(counts,4)?15:0;
+    case"LARGE_STRAIGHT":return hasStraight(counts,5)?30:0;
+    case"YACHT":return d.every(x=>x===d[0])?50:0;
+  }
+  return 0;
+}
+
+function hasStraight(counts,len){
+  let arr=[]; for(let i=1;i<=6;i++) arr.push(counts[i]>0?1:0);
+  let current=0; for(let i=0;i<6;i++){ if(arr[i]===1){ current++; if(current>=len) return true;}else current=0;}
+  return false;
+}
+
+function endGame(){
+  let text="The game is over!\n\n";
+  let p1Score = calcTotal(players[0]);
+  let p2Score = calcTotal(players[1]);
+  if(p1Score > p2Score) text+= `${players[0]} is won!\n`;
+  else if(p1Score === p2Score) text+= `Draw!\n`;
+  else text+= `${players[1]} is won!\n`;
+
+  alert(text);
+  resetGame();
+}
+
+function resetGame(){
+  players = ["P1", "P2"];
+  
+  scores = {};
+  players.forEach(p=>{
+    scores[p] = {};
+    categories.forEach(c=> scores[p][c] = null);
+  });
+
+  turn = 0;
+  round = 1;
+  rollCount = 3;
+  dice = [1,1,1,1,1];
+  keep = [false,false,false,false,false];
+
+  updateUI();
+}
+
+
+function escapeHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+window.onload=startGame;
+</script>
+
+</body>
+</html>
