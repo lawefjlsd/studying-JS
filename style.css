@@ -1,0 +1,61 @@
+/* (기존 body, #container, h1, p 스타일은 유지) */
+
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    background-color: #f0f0f0;
+    transition: background-color 0.5s ease;
+    text-align: center;
+}
+
+#container {
+    padding: 40px;
+    border-radius: 10px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    max-width: 500px; /* 컨테이너 최대 너비 추가 */
+}
+
+/* .main-image: class 속성값이 'main-image'인 요소에 스타일을 적용합니다. (.은 클래스 선택자) */
+.main-image {
+    max-width: 100%; /* 부모 요소(container) 크기에 맞게 이미지 크기 제한 */
+    height: auto; /* 비율 유지 */
+    margin-bottom: 20px;
+    border-radius: 8px; /* 이미지를 둥글게 처리 */
+}
+
+/* .control-btn: id가 아닌 class로 버튼 스타일을 통일합니다. (코드 재사용성 증가) */
+.control-btn {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    margin: 10px 5px; /* 버튼 간 간격 추가 */
+    cursor: pointer;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.control-btn:hover {
+    background-color: #0056b3;
+}
+
+/* input[type="text"]: type 속성이 "text"인 input 요소에만 적용 */
+input[type="text"] {
+    padding: 10px;
+    margin: 10px 0;
+    width: 80%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+/* #displayArea: 입력된 텍스트를 표시할 영역 스타일 */
+#displayArea {
+    font-weight: bold; /* 텍스트 강조 */
+    color: #d9534f; /* 눈에 띄는 색상 */
+}
