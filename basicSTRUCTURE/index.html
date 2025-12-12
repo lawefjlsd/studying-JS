@@ -3,25 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HTML/CSS/JS 업데이트 샘플</title>
+    <title>HTML/CSS/JS study_1</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="container">
-        <h1>업데이트된 웹페이지 ✨</h1>
+        <h1>WebPage ✨</h1>
         
         <img src="https://via.placeholder.com/300x150?text=Placeholder+Image" alt="샘플 이미지" class="main-image">
+        <!--src = source(URL), alt = alternative, width/height = px or %, 
+        title = tooltip, loading = priorty (eager - 즉시 다운로드, lazy - 보일때 다운로드)
+        srcset : 각각의 해상도로 저장 [URL][크기 서술자<-w를 이용해 실제너비를 픽셀 단위로 지정] 
+        or [URL][픽셀밀도서술자<-x를 이용하여 픽셀밀도를 지정]
+        sizes : 이미지가 차지할 최종 레이아웃 크기 ex) (max-width: 600px) 100vw, 50vw
+        usemap : 이미지맵 ex)
+        <img src="shape.png" usemap="#shape-map" alt="도형 이미지">
+        <map name="shape-map">
+        <area shape="circle" coords="100,100,50" href="circle.html" alt="원">
+        <area shape="rect" coords="200,50,300,150" href="square.html" alt="사각형">
+        </map>
+        -->
+        <p>this is passage region</p>
         
-        <p>배경색을 바꾸는 버튼과, 텍스트를 입력하면 아래에 표시되는 입력창이 추가되었습니다.</p>
+        <button id="colorButton" class="control-btn">change background color</button>
         
-        <button id="colorButton" class="control-btn">배경색 바꾸기</button>
+        <hr> <h2>text input</h2>
+        <input type="text" id="textInput" placeholder="enter">
         
-        <hr> <h2>텍스트 입력 기능</h2>
-        <input type="text" id="textInput" placeholder="여기에 텍스트를 입력하세요">
+        <p>entered content <span id="displayArea"></span></p>
         
-        <p>입력된 내용: <span id="displayArea"></span></p>
-        
-        <button id="updateButton" class="control-btn">내용 업데이트</button>
+        <button id="updateButton" class="control-btn">update</button>
 
     </div>
     <script src="script.js"></script>
